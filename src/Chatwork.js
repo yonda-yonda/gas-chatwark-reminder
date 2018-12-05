@@ -29,7 +29,7 @@ Chatwork.prototype.get = function(apiMethod) {
     var response = UrlFetchApp.fetch(url, options);
     var content = response.getContentText('UTF-8');
     this.updateRateLimit(response)
-    return JSON.parse(content);
+    return content; // データがないときはから空文字列
 }
 
 Chatwork.prototype.post = function(apiMethod, query) {
@@ -43,7 +43,7 @@ Chatwork.prototype.post = function(apiMethod, query) {
     };
     var response = UrlFetchApp.fetch(url, options);
     var content = response.getContentText('UTF-8');
-    return JSON.parse(content);
+    return content; // データがないときはから空文字列
 }
 
 /**
@@ -80,7 +80,10 @@ Chatwork.prototype.updateRateLimit = function(response) {
  * 所属しているチャットルームのIDを取得
  */
 Chatwork.prototype.getGroupIdList = function() {
-    var rooms = this.get('rooms')
+  var content = this.get('rooms');
+  var rooms = (content.length === 0)
+      ? []
+      : JSON.parse(content)
     var groupIds = rooms.filter(function(room) {
         return room['type'] === 'group'
     }).map(function(room) {
@@ -98,7 +101,10 @@ Chatwork.prototype.getGroupIdList = function() {
  *
  */
 Chatwork.prototype.getRoomsOpenTasks = function(roomId) {
-    return this.get('rooms/' + roomId + '/tasks?status=open')
+  var content = this.get('rooms/' + roomId + '/tasks?status=open')
+  return (content.length === 0)
+      ? []
+      : JSON.parse(content)
 }
 
 /**
@@ -165,7 +171,9 @@ Chatwork.prototype.postRemind = function(id, tasksExpiredYesterdayBefore, tasksE
             }
         })
     }
-    this.post('/rooms/' + roomId + '/messages', {'body': message});
+    if (message.length > 0) 
+        this.post('/rooms/' + id + '/messages', {'body': message});
+    }
 }
 
 /**
